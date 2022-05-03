@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "token")
     SQLALCHEMY_DATABASE_URL = \
         f"postgresql://{user}:{password}@{server}/{db}"
+    TEST_SQLALCHEMY_DATABASE_URL = \
+        f"postgresql://{user}:{password}@{server}/test"
 
 
 settings = Settings()
