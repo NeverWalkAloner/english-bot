@@ -35,7 +35,7 @@ async def root(
     return await random_word(update=update, db=db, user=user)
 
 
-@router.get("/random-word/", response_model=Dictionary)
+@router.post("/random-word/")
 async def random_word(
         update: Update,
         db: Session = Depends(get_db),
@@ -57,7 +57,7 @@ async def random_word(
             "Нет доступных слов",
             reply_markup=markup,
         )
-        return {"status": "OK"}
+        return {"status": "NOK"}
     markup = types.ReplyKeyboardMarkup()
     skip = types.KeyboardButton("Пропустить слово")
     show = types.KeyboardButton("Показать слово")
@@ -70,7 +70,7 @@ async def random_word(
     return {"status": "OK"}
 
 
-@router.get("/guess-word/", response_model=Dictionary)
+@router.post("/guess-word/")
 async def guess_word(
         update: Update,
         db: Session = Depends(get_db),
@@ -95,7 +95,7 @@ async def guess_word(
             update.message.chat.id,
             "Неверно, попробуйте еще раз.",
         )
-        return {"status": "OK"}
+        return {"status": "NOK"}
 
 
 @router.post("/sign-up/", response_model=User)
