@@ -21,27 +21,35 @@ async def root(
         user: user_models.User = Depends(get_current_user)
 ):
     if update.message.text == "/start":
-        return await create_user(update=update, db=db)
+        user = await create_user(update=update, db=db)
     elif update.message.text == "/new_words":
         crud_users.set_usage_mode(db, user, user_models.UsageMode.new_words)
     elif update.message.text == "/repeat_words":
         crud_users.set_usage_mode(db, user, user_models.UsageMode.repeat_words)
     elif update.message.text == "Пропустить слово":
         crud_users.delete_in_progress_word(db, user)
+    elif update.message.text == "Показать слово":
+        return await current_word(update=update, db=db, user=user)
     elif user.word_in_progress:
-        word_in_progress = user.word_in_progress.word.english
-        if word_in_progress.lower() == update.message.text.lower():
-            crud_users.update_in_progress_word(db, user)
-            next_word = types.KeyboardButton("следующее слово")
-            markup = types.ReplyKeyboardMarkup()
-            markup.add(next_word)
-            await bot.send_message(
-                update.message.chat.id,
-                "Правильно!",
-                reply_markup=markup,
-            )
-            return {"status": "OK"}
-    user_word = await random_word(db=db, user=user)
+        return await guess_word(update=update, db=db, user=user)
+    return await random_word(update=update, db=db, user=user)
+
+
+@router.get("/random-word/", response_model=Dictionary)
+async def random_word(
+        update: Update,
+        db: Session = Depends(get_db),
+        user: user_models.User = Depends(get_current_user)
+):
+    if user.word_in_progress:
+        user_word = user.word_in_progress
+    elif user.usage_mode == user_models.UsageMode.new_words:
+        word = crud_dictionary.get_random_new_word(db)
+        user_word = crud_users.create_word_in_progress(db, user, word)
+    else:
+        user_word = crud_dictionary.get_random_repeated_word(db, user)
+        if user_word:
+            crud_users.update_progress_word(db, user_word, in_progress=True)
     if not user_word:
         markup = types.ReplyKeyboardRemove()
         await bot.send_message(
@@ -52,7 +60,8 @@ async def root(
         return {"status": "OK"}
     markup = types.ReplyKeyboardMarkup()
     skip = types.KeyboardButton("Пропустить слово")
-    markup.add(skip)
+    show = types.KeyboardButton("Показать слово")
+    markup.add(skip, show)
     await bot.send_message(
         update.message.chat.id,
         user_word.word.russian,
@@ -61,19 +70,32 @@ async def root(
     return {"status": "OK"}
 
 
-@router.get("/random_word/", response_model=Dictionary)
-async def random_word(
+@router.get("/guess-word/", response_model=Dictionary)
+async def guess_word(
+        update: Update,
         db: Session = Depends(get_db),
         user: user_models.User = Depends(get_current_user)
 ):
-    if user.word_in_progress:
-        return user.word_in_progress
-    if user.usage_mode == user_models.UsageMode.new_words:
-        word = crud_dictionary.get_random_new_word(db)
+    if not user.word_in_progress:
+        return {"status": "NOK"}
+    word_in_progress = user.word_in_progress.word.english
+    if word_in_progress.lower() == update.message.text.lower():
+        crud_users.update_progress_word(db, user.word_in_progress)
+        next_word = types.KeyboardButton("следующее слово")
+        markup = types.ReplyKeyboardMarkup()
+        markup.add(next_word)
+        await bot.send_message(
+            update.message.chat.id,
+            "Правильно!",
+            reply_markup=markup,
+        )
+        return {"status": "OK"}
     else:
-        word = crud_dictionary.get_random_repeated_word(db, user)
-    if word:
-        return crud_users.create_word_in_progress(db, user, word)
+        await bot.send_message(
+            update.message.chat.id,
+            "Неверно, попробуйте еще раз.",
+        )
+        return {"status": "OK"}
 
 
 @router.post("/sign-up/", response_model=User)
@@ -82,3 +104,23 @@ async def create_user(update: Update, db: Session = Depends(get_db)):
     if user:
         return user
     return crud_users.create_user(db=db, user=update.message.user)
+
+
+@router.post("/current-word/", response_model=User)
+async def current_word(
+        update: Update,
+        db: Session = Depends(get_db),
+        user: user_models.User = Depends(get_current_user),
+):
+    if not user.word_in_progress:
+        return {"status": "NOK"}
+    next_word = types.KeyboardButton("следующее слово")
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(next_word)
+    await bot.send_message(
+        update.message.chat.id,
+        user.word_in_progress.word.english,
+        reply_markup=markup,
+    )
+    crud_users.delete_in_progress_word(db, user)
+    return {"status": "OK"}

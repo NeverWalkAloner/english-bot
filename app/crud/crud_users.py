@@ -40,11 +40,16 @@ def create_word_in_progress(db: Session, user: User, word: Dictionary):
 
 
 def delete_in_progress_word(db: Session, user: User):
-    db.delete(user.word_in_progress)
-    db.commit()
+    if user.word_in_progress:
+        db.delete(user.word_in_progress)
+        db.commit()
 
 
-def update_in_progress_word(db: Session, user: User):
-    user.word_in_progress.in_progress = False
-    db.add(user.word_in_progress)
+def update_progress_word(
+        db: Session,
+        user_word: UserWords,
+        in_progress: bool = False
+):
+    user_word.in_progress = in_progress
+    db.add(user_word)
     db.commit()
