@@ -106,7 +106,7 @@ async def create_user(update: Update, db: Session = Depends(get_db)):
     return crud_users.create_user(db=db, user=update.message.user)
 
 
-@router.post("/current-word/", response_model=User)
+@router.post("/current-word/")
 async def current_word(
         update: Update,
         db: Session = Depends(get_db),

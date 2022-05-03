@@ -6,7 +6,7 @@ from sqlalchemy_utils import create_database, drop_database
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.db.base import Base, User
+from app.db.base import Base, Dictionary, User, UserWords
 from app.api.deps import get_db
 from app.core.config import settings
 
@@ -55,4 +55,31 @@ def user(db):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    yield db_user
+    db.delete(db_user)
+    db.commit()
+
+
+@pytest.fixture
+def dictionary(db):
+    db_dictionary = Dictionary(
+        english="hello",
+        russian="привет",
+    )
+    db.add(db_dictionary)
+    db.commit()
+    db.refresh(db_dictionary)
+    yield db_dictionary
+    db.delete(db_dictionary)
+    db.commit()
+
+
+@pytest.fixture
+def current_word(db, user, dictionary):
+    user_word = UserWords(user=user, word=dictionary, in_progress=True)
+    db.add(user_word)
+    db.commit()
+    db.refresh(user_word)
+    yield user_word
+    db.delete(user_word)
+    db.commit()
