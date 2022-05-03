@@ -10,3 +10,19 @@ services:
     restart: unless-stopped
     volumes:
       - ".postgres-data:/var/lib/postgresql/data:delegated"
+  web:
+    build: .
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_SERVER=db
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=learn-english-bot
+      - TELEGRAM_TOKEN=token
+      - WAIT_HOSTS=db:5432
+    volumes:
+      - .:/learn-english-bot
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      - db

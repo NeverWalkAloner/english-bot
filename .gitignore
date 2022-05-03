@@ -6,3 +6,4 @@ venv/
 dict_db
 .env
 dict.txt
+docker-compose.override.yml
