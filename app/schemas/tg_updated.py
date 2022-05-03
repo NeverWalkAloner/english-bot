@@ -4,8 +4,8 @@ from pydantic import BaseModel
 
 class User(BaseModel):
     id: int
-    username: str
-    first_name: str
+    username: Optional[str]
+    first_name: Optional[str]
 
     class Config:
         orm_mode = True
