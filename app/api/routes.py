@@ -27,7 +27,10 @@ async def root(
     elif update.message.text == "/repeat_words":
         crud_users.set_usage_mode(db, user, user_models.UsageMode.repeat_words)
     elif update.message.text == "Пропустить слово":
-        crud_users.delete_in_progress_word(db, user)
+        if user.usage_mode == user_models.UsageMode.new_words:
+            crud_users.delete_in_progress_word(db, user)
+        else:
+            crud_users.update_progress_word(db, user.word_in_progress)
     elif update.message.text == "Показать слово":
         return await current_word(update=update, db=db, user=user)
     elif user.word_in_progress:
@@ -122,5 +125,8 @@ async def current_word(
         user.word_in_progress.word.english,
         reply_markup=markup,
     )
-    crud_users.delete_in_progress_word(db, user)
+    if user.usage_mode == user_models.UsageMode.new_words:
+        crud_users.delete_in_progress_word(db, user)
+    else:
+        crud_users.update_progress_word(db, user.word_in_progress)
     return {"status": "OK"}

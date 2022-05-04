@@ -17,6 +17,7 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=learn-english-bot
+      - DB_PREFIX=postgresql
       - TELEGRAM_TOKEN=token
       - WAIT_HOSTS=db:5432
     volumes:
