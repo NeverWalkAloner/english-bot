@@ -33,7 +33,11 @@ async def root(
     elif update.message.text == "Показать слово":
         return await current_word(update=update, db=db, user=user)
     elif update.message.text.lower() == settings.EASTER_EGG_TEXT.lower():
-        bot.send_message(update.message.chat.id, settings.EASTER_EGG_RESPONSE)
+        await bot.send_message(
+            update.message.chat.id,
+            settings.EASTER_EGG_RESPONSE,
+        )
+        return {"status": "OK"}
     elif user.word_in_progress:
         return await guess_word(update=update, db=db, user=user)
     return await random_word(update=update, db=db, user=user)
