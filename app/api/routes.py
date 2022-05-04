@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 from telebot import types
 
 from app.schemas.tg_updated import Update, User
-from app.schemas.dictionary import Dictionary
-from app.core.config import bot
+from app.core.config import bot, settings
 from app.crud import crud_dictionary
 from app.crud import crud_users
 from app.models import users as user_models
@@ -33,6 +32,8 @@ async def root(
             crud_users.update_progress_word(db, user.word_in_progress)
     elif update.message.text == "Показать слово":
         return await current_word(update=update, db=db, user=user)
+    elif update.message.text.lower() == settings.EASTER_EGG_TEXT.lower():
+        bot.send_message(update.message.chat.id, settings.EASTER_EGG_RESPONSE)
     elif user.word_in_progress:
         return await guess_word(update=update, db=db, user=user)
     return await random_word(update=update, db=db, user=user)

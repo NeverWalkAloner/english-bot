@@ -16,6 +16,11 @@ class Settings(BaseSettings):
         f"{db_prefix}://{user}:{password}@{server}/{db}"
     TEST_SQLALCHEMY_DATABASE_URL = \
         f"{db_prefix}://{user}:{password}@{server}/test"
+    EASTER_EGG_TEXT = os.getenv("EASTER_EGG_TEXT", "EASTER_EGG_TEXT")
+    EASTER_EGG_RESPONSE = os.getenv(
+        "EASTER_EGG_RESPONSE",
+        "EASTER_EGG_RESPONSE",
+    )
 
 
 settings = Settings()
